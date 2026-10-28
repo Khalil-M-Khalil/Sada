@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>صدى</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b1322;--ink:#e8eefc;--mute:#9aaad0;--quiet:#4f7cff;--mid:#b98cff;--hot:#ff6b57;--panel:rgba(16,28,52,.64);--line:rgba(160,185,255,.2);font-family:Tajawal,"Segoe UI",Tahoma,sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);overflow:hidden}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+canvas:active{cursor:grabbing}
+.brand{position:fixed;inset-block-start:20px;inset-inline-start:20px}
+.brand b{font-size:28px;font-weight:800;display:block;line-height:1}
+.brand span{font-size:13px;color:var(--mute)}
+#mode{position:fixed;inset-block-start:22px;inset-inline-end:20px;font-size:13px;color:var(--mute);padding:6px 12px;border:1px solid var(--line);border-radius:99px;background:var(--panel)}
+.status{position:fixed;inset-block-start:18px;inset-inline:0;text-align:center;pointer-events:none}
+.status h1{margin:0;font-size:clamp(26px,4vw,50px);font-weight:800;transition:color .3s}
+.status p{margin:4px 0 0;color:var(--mute);font-size:15px}
+.status.mid h1{color:var(--mid)}.status.hot h1{color:var(--hot)}
+.panel{position:fixed;padding:18px;background:var(--panel);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:20px}
+.ctl{inset-block-start:96px;inset-inline-start:20px;width:270px;display:grid;gap:16px;max-height:calc(100vh - 120px);overflow:auto}
+.log{inset-block-start:96px;inset-inline-end:20px;width:250px}
+.log h2{margin:0 0 10px;font-size:15px;color:var(--mute);font-weight:700}
+.log ol{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.log li{display:grid;gap:4px;font-size:14px}
+.log li i{display:block;height:5px;border-radius:9px;background:linear-gradient(90deg,var(--mid),var(--hot))}
+.log .none{color:var(--mute);font-size:14px}
+.sw{display:flex;align-items:center;gap:12px;background:none;border:0;color:var(--ink);font:700 17px inherit;cursor:pointer;padding:0}
+.sw i{width:48px;height:28px;border-radius:99px;background:#2a3a5f;position:relative;transition:background .2s;flex:none}
+.sw i::after{content:"";position:absolute;inset-block-start:4px;inset-inline-start:4px;width:20px;height:20px;border-radius:50%;background:#fff;transition:inset-inline-start .2s}
+.sw[aria-checked=true] i{background:var(--quiet)}
+.sw[aria-checked=true] i::after{inset-inline-start:24px}
+label{display:grid;gap:8px;font-size:14px;color:var(--mute)}
+label div{display:flex;justify-content:space-between}
+output{color:var(--ink);font-weight:700}
+input[type=range]{width:100%;accent-color:var(--mid)}
+.btn{font:700 15px inherit;color:#fff;background:var(--quiet);border:0;border-radius:12px;padding:12px 14px;cursor:pointer;position:relative;overflow:hidden}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn:disabled{opacity:.6;cursor:default}
+.btn i{position:absolute;inset:0 auto 0 0;background:rgba(255,255,255,.25);width:0}
+button:focus-visible,input:focus-visible{outline:2px solid var(--mid);outline-offset:3px}
+.legend{position:fixed;inset-block-end:14px;inset-inline:0;text-align:center;font-size:13px;color:var(--mute);margin:0;pointer-events:none;padding:0 16px}
+#flash{position:fixed;inset:0;pointer-events:none;box-shadow:inset 0 0 0 0 rgba(255,107,87,0);transition:box-shadow .7s}
+#flash.on{box-shadow:inset 0 0 150px 30px rgba(255,107,87,.5)}
+.zp summary{cursor:pointer;font-weight:700}.zp p{font-size:13px;color:var(--mute);margin:8px 0;line-height:1.6}.zb{display:grid;gap:6px}
+select{font:inherit;color:var(--ink);background:#14213c;border:1px solid var(--line);border-radius:10px;padding:8px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border:1px solid var(--line);border-radius:14px}
+.seg button{font:700 14px inherit;color:var(--mute);background:none;border:0;border-radius:10px;padding:9px 6px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--quiet);color:#fff}
+.lab{position:fixed;left:0;top:0;pointer-events:none;font-size:13px;padding:4px 10px;border-radius:99px;background:var(--panel);border:1px solid var(--line);white-space:nowrap;display:none}
+dialog{background:#101c34;color:var(--ink);border:1px solid var(--line);border-radius:20px;max-width:480px;padding:22px;line-height:1.75}
+dialog::backdrop{background:rgba(5,10,20,.65)}
+dialog h2{margin:0 0 8px;font-size:20px}dialog ol{padding-inline-start:20px;margin:0 0 16px}dialog li{margin-bottom:8px}dialog b{color:var(--mid)}
+@media(max-width:760px){.log{display:none}.brand span{display:none}.ctl{inset:auto 12px 40px 12px;width:auto;padding:14px;gap:12px}.status{inset-block-start:60px}#mode{inset-block-start:60px;display:none}}
+</style>
+</head>
+<body>
+<canvas id="c" aria-label="مشهد ثلاثي الأبعاد يعرض شدة الحركة عبر الزمن"></canvas>
+<div class="brand"><b>صدى</b><span>يرصد الحركة من إشارة الواي فاي</span></div>
+<div id="mode"></div>
+<div class="status" id="status"><h1 id="h"></h1><p id="s"></p></div>
+
+<aside class="panel ctl"><div class="seg" role="group" aria-label="طريقة العرض"><button id="mL" aria-pressed="true">منظر الرابط</button><button id="mT" aria-pressed="false">مسار الزمن</button></div>
+  <button class="sw" id="arm" role="switch" aria-checked="false"><i></i><span>الحماية متوقفة</span></button>
+  <label for="sens"><div><span>الحساسية</span><output id="sv">6</output></div><input id="sens" type="range" min="1" max="12" value="6"></label>
+  <button class="btn" id="cal"><i id="calbar"></i><span id="caltxt">سجّل هدوء الغرفة</span></button>
+  <button class="btn ghost" id="snz">أوقف التنبيه 10 دقائق</button>
+  <label for="gap"><div><span>أقل فاصل بين التنبيهات</span></div><select id="gap"><option value="30">30 ثانية</option><option value="60">دقيقة</option><option value="300">5 دقائق</option><option value="600">10 دقائق</option></select></label>
+  <details class="zp"><summary>تحديد الموضع داخل الرابط</summary>
+  <p>بعد تسجيل هدوء الغرفة: اضغط اسم منطقة ثم تحرّك فيها بشكل طبيعي 12 ثانية. كرّر للمناطق الثلاث. تظهر دقة التقدير بعد منطقتين على الأقل.</p>
+  <div class="zb"><button class="btn ghost" data-z="0">قرب الهاتف</button><button class="btn ghost" data-z="1">الوسط</button><button class="btn ghost" data-z="2">قرب اللابتوب</button></div>
+  <p id="zs"></p><button class="btn ghost" id="zc">امسح التدريب</button></details>
+  <button class="btn ghost" id="hb">كيف تقيس الأداة؟</button>
+</aside>
+<aside class="panel log"><h2>آخر الحركات</h2><ol id="log"><li class="none">لا توجد حركات بعد</li></ol><h2 style="margin-top:16px">الإشارة كما يقرؤها الجهاز</h2><canvas id="rc" width="250" height="84" style="position:static;cursor:default;width:100%;height:84px"></canvas><p id="rv" style="margin:4px 0 0;font-size:13px;color:var(--mute)"></p></aside>
+<p class="legend" id="lg">الارتفاع = شدة تغيّر الإشارة. الأقرب إليك هو الآن، والأبعد قبل نحو 24 ثانية. الطبقة الحمراء الشفافة هي حد التنبيه. اسحب للتدوير وكبّر بالعجلة.</p>
+<span class="lab" id="lp">الهاتف · نقطة الاتصال</span><span class="lab" id="ll">اللابتوب</span><span class="lab" id="lz">منطقة الرصد</span><span class="lab" id="lm"></span>
+<dialog id="how"><h2>كيف تقيس الأداة؟</h2><ol>
+<li>الهاتف الذي ينشر نقطة الاتصال <b>يرسل</b> إشارة واي فاي إلى اللابتوب باستمرار.</li>
+<li>كل نصف ثانية يقرأ اللابتوب <b>قوة</b> هذه الإشارة، وهي رقم بوحدة dBm، وكلما اقترب من الصفر كانت أقوى. هذا الرقم هو الخط في الرسم الصغير.</li>
+<li>والغرفة ساكنة يبقى الرقم ثابتاً تقريباً. وعندما يتحرك جسم قرب الرابط بين الجهازين يمتص جزءاً من الإشارة ويعكس جزءاً، فيبدأ الرقم <b>يتذبذب</b>.</li>
+<li>عند «تسجيل هدوء الغرفة» تحفظ الأداة مقدار التذبذب الطبيعي. بعدها تقارن التذبذب الحالي بالهادئ، وتنبّه إذا تجاوز الحد الذي تحدده الحساسية.</li>
+<li><b>ما تعرفه:</b> هل توجد حركة وما شدتها. <b>ما لا تعرفه:</b> مكانها أو اتجاهها، لأن رابطاً واحداً (هاتف واحد ولابتوب واحد) يعطي رقماً واحداً فقط. لذلك لا تحسب الأداة المكان بالفيزياء: تتعلم من تدريبك كيف تبدو الحركة في كل منطقة، وتقيس دقتها بنفسها، وتقول «غير مؤكد» إذا لم تميّز بينها.</li>
+<li><b>نصائح:</b> ثبّت الهاتف على سطح لا يتحرك ولا تلمسه، وأبقِه مشحوناً وشاشته مضاءة حتى لا يوقف النقطة. حركتك أنت قرب الجهازين تُحسب حركة.</li></ol>
+<button class="btn" id="hx">فهمت</button></dialog>
+<div id="flash"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const $=s=>document.querySelector(s),clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+const st={armed:false,sens:6,cal:-1,calibrated:false,ratio:1,thr:2.4,err:null,demo:false,snooze:false,train:null,fp:[0,0,0],acc:null,zone:null,zc:0,hz:0,res:''};
+if(!window.THREE){$('#h').textContent='المكتبة ثلاثية الأبعاد تحتاج اتصالاً بالإنترنت لأول تشغيل';throw 0}
+const ROWS=48,COLS=64,W=36,DEP=22,H=1.3;
+const hist=new Array(ROWS).fill(1),cur=new Array(ROWS).fill(1);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---- scene ---- */
+const cv=$('#c'),R=new THREE.WebGLRenderer({canvas:cv,antialias:true});
+R.setPixelRatio(Math.min(devicePixelRatio,2));
+const sc=new THREE.Scene();sc.background=new THREE.Color(0x0b1322);sc.fog=new THREE.Fog(0x0b1322,32,75);
+const cam=new THREE.PerspectiveCamera(45,1,.1,200);
+let az=.35,el=.5,dist=38,idle=0;
+const place=()=>{cam.position.set(Math.sin(az)*Math.cos(el)*dist,Math.sin(el)*dist,Math.cos(az)*Math.cos(el)*dist);cam.lookAt(0,1.6,0)};
+const geo=new THREE.PlaneGeometry(W,DEP,COLS-1,ROWS-1).rotateX(-Math.PI/2);
+const pos=geo.attributes.position;
+const colr=new THREE.BufferAttribute(new Float32Array(pos.count*3),3);geo.setAttribute('color',colr);
+sc.add(new THREE.Mesh(geo,new THREE.MeshBasicMaterial({vertexColors:true,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1})));
+sc.add(new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:0xcfe0ff,wireframe:true,transparent:true,opacity:.11})));
+const tpG=new THREE.PlaneGeometry(W,DEP).rotateX(-Math.PI/2);
+const tp=new THREE.Mesh(tpG,new THREE.MeshBasicMaterial({color:0xff6b57,transparent:true,opacity:.1,side:THREE.DoubleSide,depthWrite:false}));
+tp.add(new THREE.LineSegments(new THREE.EdgesGeometry(tpG),new THREE.LineBasicMaterial({color:0xff6b57,transparent:true,opacity:.75})));
+sc.add(tp);const tg=new THREE.Group();[...sc.children].forEach(o=>tg.add(o));sc.add(tg);
+const cQ=new THREE.Color(0x4f7cff),cM=new THREE.Color(0xb98cff),cH=new THREE.Color(0xff6b57),tmp=new THREE.Color();
+function col(k){k<.5?tmp.copy(cQ).lerp(cM,k*2):tmp.copy(cM).lerp(cH,Math.min(1,(k-.5)*2));return tmp.multiplyScalar(.42+.58*Math.min(1,k*1.3))}
+/* link view: phone -> laptop, with the zone whose signal is disturbed by motion */
+let mode='link';const rs=[],v3=new THREE.Vector3(),eL={p:$('#lp'),l:$('#ll'),z:$('#lz'),m:$('#lm')};
+const lv=new THREE.Group();sc.add(lv);
+const bm=(c,o=1)=>new THREE.MeshBasicMaterial({color:c,transparent:o<1,opacity:o});
+const PH=new THREE.Vector3(-13,1.4,0),LP=new THREE.Vector3(13,1.4,0);
+const ph=new THREE.Mesh(new THREE.BoxGeometry(1.5,2.8,.3),bm(0xe8eefc));ph.position.copy(PH);
+const lb=new THREE.Mesh(new THREE.BoxGeometry(3.6,.2,2.4),bm(0xe8eefc));lb.position.set(13,.5,0);
+const ls=new THREE.Mesh(new THREE.BoxGeometry(3.6,2.3,.2),bm(0x9aaad0));ls.position.set(13,1.7,-1.2);ls.rotation.x=-.2;
+const grid=new THREE.GridHelper(44,22,0x2a3a5f,0x1a2744);
+const zone=new THREE.Mesh(new THREE.SphereGeometry(1,32,20),new THREE.MeshBasicMaterial({color:0x4f7cff,transparent:true,opacity:.08,depthWrite:false}));
+zone.scale.set(14,5.5,5.5);zone.position.set(0,1.4,0);
+const zoneW=new THREE.Mesh(new THREE.SphereGeometry(1,24,14),new THREE.MeshBasicMaterial({color:0xcfe0ff,wireframe:true,transparent:true,opacity:.12}));
+zoneW.position.copy(zone.position);zoneW.scale.copy(zone.scale);
+const pk=[];for(let i=0;i<28;i++){const q=new THREE.Mesh(new THREE.SphereGeometry(.16,8,6),bm(0xb98cff));pk.push(q);lv.add(q)}
+lv.add(ph,lb,ls,grid,zone,zoneW);
+const FZ=['قرب الهاتف','الوسط','قرب اللابتوب'],ZX=[-9,0,9];
+const segs=ZX.map(x=>{const s=new THREE.Mesh(new THREE.PlaneGeometry(8,7).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0x4f7cff,transparent:true,opacity:.06,depthWrite:false}));s.position.set(x,.03,0);lv.add(s);return s});
+const beam=new THREE.Mesh(new THREE.CylinderGeometry(.9,.9,7,24,1,true),new THREE.MeshBasicMaterial({color:0xff6b57,transparent:true,opacity:.4,side:THREE.DoubleSide,depthWrite:false}));
+beam.position.y=3.5;beam.visible=false;lv.add(beam);
+const sl=FZ.map((n,i)=>{const e=document.createElement('span');e.className='lab';e.textContent=n;document.body.append(e);eL['s'+i]=e;return e});
+const nzn=()=>st.fp.filter(n=>n>=8).length,trusted=()=>st.acc!=null&&st.acc>=1/Math.max(2,nzn())+.25;
+function lab(el,pt){v3.copy(pt).project(cam);el.style.display=v3.z<1?'block':'none';el.style.transform='translate(-50%,-50%) translate('+(v3.x*.5+.5)*innerWidth+'px,'+(-v3.y*.5+.5)*innerHeight+'px)'}
+function linkFrame(t){
+  if(mode!=='link')return;
+  const lvl=clamp((st.ratio-1)/Math.max(st.thr-1,.15),0,1.4),k=Math.min(1,lvl);
+  tmp.copy(cQ).lerp(cH,k);zone.material.color.copy(tmp);zone.material.opacity=.07+.17*k;
+  zone.scale.y=zone.scale.z=5.5*(1+.07*Math.sin(t*6)*k);zoneW.scale.copy(zone.scale);
+  pk.forEach((q,i)=>{const u=(i/pk.length+t*.22)%1;q.position.lerpVectors(PH,LP,u);q.position.y+=Math.sin(u*18+t*7)*.55*lvl;q.material.color.copy(tmp)});
+  const on=st.ratio>=st.thr&&st.zone!=null,tr=trusted();
+  segs.forEach((s,i)=>s.material.opacity=.06+(on&&st.zone===i?(tr?.26:.1):0));
+  beam.visible=on;
+  if(on){beam.position.x+=(ZX[st.zone]-beam.position.x)*.15;beam.material.opacity=(tr?.42:.14)*(.75+.25*Math.sin(t*8));
+    eL.m.textContent=FZ[st.zone]+' · '+(tr?'ثقة '+Math.round(st.zc*100)+'%':'غير مؤكد');lab(eL.m,new THREE.Vector3(beam.position.x,9.2,0))}
+  else eL.m.style.display='none';
+  sl.forEach((e,i)=>lab(e,new THREE.Vector3(ZX[i],0,5)));
+  lab(eL.p,new THREE.Vector3(-13,4,0));lab(eL.l,new THREE.Vector3(13,4,0));lab(eL.z,new THREE.Vector3(0,7.6,0));
+}
+function chart(){
+  const c=$('#rc'),g=c.getContext('2d'),w=c.width,hh=c.height;g.clearRect(0,0,w,hh);if(rs.length<2)return;
+  const mn=Math.min(...rs),mx=Math.max(...rs),rg=Math.max(mx-mn,6),mid=(mx+mn)/2;
+  g.strokeStyle='rgba(160,185,255,.25)';g.beginPath();g.moveTo(0,hh/2);g.lineTo(w,hh/2);g.stroke();
+  g.strokeStyle=st.ratio>=st.thr?'#ff6b57':'#b98cff';g.lineWidth=2;g.beginPath();
+  rs.forEach((v,i)=>{const x=i/(rs.length-1)*w,y=hh/2-(v-mid)/rg*(hh-14);i?g.lineTo(x,y):g.moveTo(x,y)});g.stroke();
+  $('#rv').textContent=rs[rs.length-1].toFixed(0)+' dBm'+(st.hz?' · '+st.hz.toFixed(1)+' قراءة/ث':'')+(st.res==='pct'?' · دقة القراءة تقريبية':'');
+}
+function setMode(m){
+  mode=m;tg.visible=m==='time';lv.visible=m==='link';
+  $('#mL').setAttribute('aria-pressed',m==='link');$('#mT').setAttribute('aria-pressed',m==='time');
+  Object.values(eL).forEach(e=>{if(m!=='link')e.style.display='none'});
+  $('#lg').textContent=m==='link'
+   ?'الهاتف يبثّ واللابتوب يستقبل. المنطقة المضيئة هي الحيّز الذي تتأثر إشارته بأي حركة، وتحمرّ وتهتزّ الجسيمات عند الحركة. الأعمدة الثلاثة على الأرض هي المناطق التي تدرّبها، والعمود المضيء يبيّن أين ترجّح الأداة أن الحركة حصلت.'
+   :'الارتفاع = شدة تغيّر الإشارة. الأقرب إليك هو الآن، والأبعد قبل نحو 24 ثانية. الطبقة الحمراء الشفافة هي حد التنبيه. اسحب للتدوير وكبّر بالعجلة.';
+}
+function resize(){R.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();dist=innerWidth<760?50:38;place()}
+addEventListener('resize',resize);resize();
+
+let drag=null;
+cv.addEventListener('pointerdown',e=>{drag=[e.clientX,e.clientY];idle=0;cv.setPointerCapture(e.pointerId)});
+cv.addEventListener('pointermove',e=>{if(!drag)return;az-=(e.clientX-drag[0])*.006;el=clamp(el+(e.clientY-drag[1])*.005,.12,1.3);drag=[e.clientX,e.clientY];place()});
+addEventListener('pointerup',()=>drag=null);
+cv.addEventListener('wheel',e=>{e.preventDefault();idle=0;dist=clamp(dist+e.deltaY*.02,18,64);place()},{passive:false});
+
+function frame(ts){
+  const t=ts/1000,thrH=(st.thr-1)*H,kk=Math.max(thrH,.5);
+  for(let r=0;r<ROWS;r++)cur[r]+=(hist[r]-cur[r])*.2;
+  for(let r=0;r<ROWS;r++){
+    const h=clamp(cur[r]-1,0,6)*H;
+    for(let c=0;c<COLS;c++){
+      const x=c/(COLS-1)-.5,env=Math.exp(-((x*3.1)**2)),w=h>.05?1+.1*Math.sin(c*.55+r*.8+t*2):1,y=h*env*w,i=r*COLS+c;
+      pos.setY(i,y);const k=col(y/kk*.9);colr.setXYZ(i,k.r,k.g,k.b);
+    }
+  }
+  pos.needsUpdate=colr.needsUpdate=true;
+  tp.position.y+=(thrH-tp.position.y)*.12;
+  if(!reduce&&!drag&&(idle+=1/60)>4){az+=.0007;place()}
+  linkFrame(t);R.render(sc,cam);requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* ---- interface ---- */
+function ui(){
+  $('#arm').setAttribute('aria-checked',st.armed);$('#arm span').textContent=st.armed?'الحماية تعمل':'الحماية متوقفة';
+  if(document.activeElement!==$('#sens'))$('#sens').value=st.sens;
+  if(st.gap&&document.activeElement!==$('#gap'))$('#gap').value=st.gap;$('#sv').textContent=st.sens;
+  let h,s,k='';
+  if(st.err){h='لا يوجد اتصال واي فاي';s='صِل الجهاز بشبكة واي فاي ثم أعد المحاولة'}
+  else if(st.cal>=0){h='جارٍ تسجيل هدوء الغرفة';s='ابتعد عن الجهاز ولا تتحرك… '+Math.round(st.cal*100)+'%'}
+  else if(!st.calibrated){h='ابدأ بتسجيل هدوء الغرفة';s='اضغط الزر في اللوحة، وأبقِ الغرفة ساكنة 15 ثانية'}
+  else if(st.ratio>=st.thr){k='hot';
+    if(st.zone!=null&&trusted()){h='حركة · '+FZ[st.zone];s='ثقة الموضع '+Math.round(st.zc*100)+'% · دقة النموذج '+Math.round(st.acc*100)+'%'}
+    else if(st.zone!=null){h='حركة داخل منطقة الرابط';s='الموضع غير مؤكد: النموذج لا يميّز المناطق بدقة كافية'}
+    else{h='حركة داخل منطقة الرابط';s='درّب المناطق من اللوحة لتحديد الموضع'}}
+  else if(st.ratio>=1+(st.thr-1)*.55){h='تغيّر خفيف';s='ربما يتحرك أحد قرب الرابط أو الجهازين';k='mid'}
+  else{h='الغرفة هادئة';s=st.armed?'الإشارة ثابتة والحماية تعمل':'الإشارة ثابتة'}
+  if(st.snooze&&st.calibrated)s+=' · التنبيه موقوف مؤقتاً';
+  $('#h').textContent=h;$('#s').textContent=s;$('#status').className='status '+k;
+  const busy=st.cal>=0;$('#cal').disabled=busy;$('#caltxt').textContent=busy?'جارٍ التسجيل…':st.calibrated?'أعد تسجيل هدوء الغرفة':'سجّل هدوء الغرفة';
+  $('#calbar').style.width=busy?st.cal*100+'%':'0';
+  const nz=nzn();
+  $('#zs').textContent=st.train?'تحرّك '+FZ[st.train.zone]+' الآن… '+Math.round(st.train.p*100)+'%'
+    :!nz?'لم تُدرَّب أي منطقة بعد'
+    :st.fp.map((n,i)=>FZ[i]+': '+(n>=8?'جاهزة':'لم تُدرَّب')).join(' · ')+(st.acc!=null?'. دقة التقدير '+Math.round(st.acc*100)+'% (الصدفة '+Math.round(100/Math.max(2,nz))+'%)'+(trusted()?'':'. غير كافية، لا تعتمد على الموقع'):'');
+  document.querySelectorAll('.zb button').forEach(b=>b.disabled=!st.calibrated||!!st.train||st.cal>=0);
+}
+function addEv(ratio,ts){
+  const ol=$('#log');ol.querySelector('.none')?.remove();
+  const li=document.createElement('li');
+  li.innerHTML='<span></span><i></i>';li.firstChild.textContent=new Date(ts||Date.now()).toLocaleTimeString('ar',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  li.lastChild.style.width=clamp(ratio/(st.thr*2)*100,12,100)+'%';
+  ol.prepend(li);while(ol.children.length>6)ol.lastChild.remove();
+}
+function onMsg(m){
+  Object.assign(st,{armed:m.armed,sens:m.sens,snooze:m.snooze,calibrated:m.calibrated,err:m.err||null,cal:m.cal??-1,ratio:m.ratio??1,thr:m.thr??st.thr,train:m.train||null,fp:m.fp||st.fp,acc:m.acc??null,zone:m.zone??null,zc:m.zc??0,hz:m.hz,res:m.res,gap:m.gap});
+  hist.push(st.ratio);hist.shift();
+  if(m.rssi!==undefined){rs.push(m.rssi);if(rs.length>60)rs.shift();chart()}
+  if(m.ev){addEv(m.ev);const f=$('#flash');f.classList.add('on');setTimeout(()=>f.classList.remove('on'),1400)}
+  ui();
+}
+function cmd(o){
+  if(st.demo){if('armed'in o)st.armed=o.armed;if('sens'in o)st.sens=o.sens;if(o.calibrate)D.cal=Date.now();if(o.snooze)D.snz=Date.now()+6e5;if('train'in o)D.tr={z:o.train,t0:Date.now()};if(o.clear_fp)st.fp=[0,0,0];return}
+  fetch('/cmd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)}).catch(()=>{});
+}
+$('#arm').onclick=()=>{st.armed=!st.armed;cmd({armed:st.armed});ui()};
+$('#sens').oninput=e=>{st.sens=+e.target.value;st.thr=Math.max(1.15,4-.26*st.sens);ui()};
+$('#sens').onchange=e=>cmd({sens:+e.target.value});
+$('#cal').onclick=()=>{cmd({calibrate:1});st.cal=0;ui()};
+$('#snz').onclick=()=>{cmd({snooze:1});st.snooze=true;ui()};
+
+/* ---- data: live from server.py, or a simulation when opened without it ---- */
+const D={walk:0,wait:5,cal:0,snz:0,hits:0,z:1,tr:null};
+function demo(){
+  st.demo=true;st.calibrated=true;$('#mode').textContent='عرض تجريبي: بيانات ومواضع مُحاكاة للعرض فقط';
+  setInterval(()=>{
+    let ratio=.85+Math.random()*.4;
+    if(D.walk>0){D.walk-=.5;ratio=2.4+3.4*Math.sin(Math.PI*(1-D.walk/4))*(.75+Math.random()*.25)}
+    else if((D.wait-=.5)<=0){D.walk=4;D.wait=9+Math.random()*8;D.z=Math.floor(Math.random()*3)}
+    const thr=Math.max(1.15,4-.26*st.sens),calp=D.cal?(Date.now()-D.cal)/3000:-1;
+    if(D.cal&&calp>=1)D.cal=0;
+    D.hits=ratio>=thr?D.hits+1:0;if(D.tr&&Date.now()-D.tr.t0>=3000){st.fp[D.tr.z]=22;D.tr=null}
+    onMsg({armed:st.armed,sens:st.sens,snooze:Date.now()<D.snz,calibrated:true,cal:D.cal?calp:undefined,ratio:D.cal?1:ratio,thr,ev:st.armed&&D.hits===2?ratio:undefined,rssi:-52+(Math.random()-.5)*2.2*ratio,train:D.tr?{zone:D.tr.z,p:Math.min(1,(Date.now()-D.tr.t0)/3000)}:null,fp:st.fp,acc:st.fp.filter(n=>n>=8).length>=2?.83:null,zone:ratio>=thr?D.z:undefined,zc:.6+Math.random()*.3});
+  },500);
+}
+function connect(){
+  if(location.protocol==='file:')return demo();
+  const es=new EventSource('/events');let ok=false;
+  es.onmessage=e=>{if(!ok){ok=true;fetch('/history').then(r=>r.json()).then(rows=>rows.slice(0,6).reverse().forEach(r=>addEv(r[1],r[0]*1000))).catch(()=>{})}onMsg(JSON.parse(e.data))};
+  es.onerror=()=>{if(!ok){es.close();demo()}};
+  $('#mode').textContent='مباشر: من واي فاي هذا الجهاز';
+}
+$('#mL').onclick=()=>setMode('link');$('#mT').onclick=()=>setMode('time');
+$('#hb').onclick=()=>$('#how').showModal();$('#hx').onclick=()=>$('#how').close();
+document.querySelectorAll('.zb button').forEach(b=>b.onclick=()=>cmd({train:+b.dataset.z}));$('#zc').onclick=()=>cmd({clear_fp:1});$('#gap').onchange=e=>cmd({gap:+e.target.value});
+setMode('link');ui();connect();
+</script>
+</body>
+</html>
